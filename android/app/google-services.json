@@ -1,0 +1,135 @@
+{
+  "project_info": {
+    "project_number": "815307774129",
+    "firebase_url": "https://mobile-mai-tong-ror.firebaseio.com",
+    "project_id": "mobile-mai-tong-ror",
+    "storage_bucket": "mobile-mai-tong-ror.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815307774129:android:a5ed0f1543f0841e",
+        "android_client_info": {
+          "package_name": "com.example.independent.mobileapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815307774129-nl6o79m4fl9gk19286u45bp1t8nu2op7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcIi_hW9z2_MX_OfX3HSCyHgTVOMYlQBo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815307774129:android:7bf9fc662407f7b0",
+        "android_client_info": {
+          "package_name": "com.maitongraw"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815307774129-nl6o79m4fl9gk19286u45bp1t8nu2op7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcIi_hW9z2_MX_OfX3HSCyHgTVOMYlQBo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815307774129:android:d8efa8531f25e117",
+        "android_client_info": {
+          "package_name": "com.myapp4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815307774129-nl6o79m4fl9gk19286u45bp1t8nu2op7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcIi_hW9z2_MX_OfX3HSCyHgTVOMYlQBo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815307774129:android:7f59248a631c19d4",
+        "android_client_info": {
+          "package_name": "com.rnfirebasealbumdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815307774129-nl6o79m4fl9gk19286u45bp1t8nu2op7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcIi_hW9z2_MX_OfX3HSCyHgTVOMYlQBo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
