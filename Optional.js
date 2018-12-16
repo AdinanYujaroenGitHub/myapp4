@@ -10,11 +10,9 @@ const firestore = firebase.firestore();
 export default class Optional extends Component {
 
     state = {
-        a: 1,
-        check: false,
         unit: 1,
         userListOrder: {},
-        selected: "key2",
+        selected: "",
         chkEgg: {
             Omlet: 'white',
             Segg: 'white'
@@ -24,7 +22,7 @@ export default class Optional extends Component {
             chkdisk: 'white',
             chkpack: 'white'
         }, resDetail: {},
-        menu: {},
+        menus: {},
         option: {},
         AllTime: [],
         detail: '',
@@ -35,7 +33,6 @@ export default class Optional extends Component {
         restaurant: '',
         timeC: '',
         ware: '',
-        dateTime: firebase.firestore.FieldValue.serverTimestamp(),
         time: {},
 
     };
@@ -50,13 +47,15 @@ export default class Optional extends Component {
         if (this.state.chkExtra == 'white') {
             this.setState({
                 chkExtra: '#e8a806',
-                price: this.state.price + (this.state.option.extra * this.state.unit)
+                price: this.state.price + (this.state.option.extra * this.state.unit),
+                optionFood: true
             })
         }
         else {
             this.setState({
                 chkExtra: 'white',
-                price: this.state.price - (this.state.option.extra * this.state.unit)
+                price: this.state.price - (this.state.option.extra * this.state.unit),
+                optionFood: false
             })
         }
 
@@ -90,8 +89,8 @@ export default class Optional extends Component {
             })
             this.addPrice('moreEggStarFromOmlet');
         }
-        
-        
+
+
 
     };
     moreEggOmlet = () => {
@@ -147,14 +146,14 @@ export default class Optional extends Component {
     };
     addPrice = (from) => {
         if (from == 'addUnit') {
-            let tmp = this.state.price / (this.state.unit )
+            let tmp = this.state.price / (this.state.unit)
             this.setState({ price: this.state.price + tmp })
         } else if (from == 'decUnit') {
-            let tmp = this.state.price / (this.state.unit )
+            let tmp = this.state.price / (this.state.unit)
             this.setState({ price: this.state.price - tmp })
         } else if (from == 'moreEggStarNewPress') {
             let tmp = this.state.option.star_egg
-            this.setState({ price: this.state.price + (this.state.unit*tmp) })
+            this.setState({ price: this.state.price + (this.state.unit * tmp) })
         } else if (from == 'moreEggStarFromStar') {
             let tmp = this.state.option.star_egg
             this.setState({ price: this.state.price - (this.state.unit * tmp) })
@@ -181,9 +180,45 @@ export default class Optional extends Component {
             })
             this.addPrice('decUnit');
         }
-        
+
     }
 
+    //********************************** user *************************************
+    unsubscribeFromFirestoreUser = () => {
+        this.subscriptionUser();//ถึงบอกว่า unsub แต่ก้ยัง sub ยุ**************
+    }
+    //******************************* ---------------------------
+
+
+    createCollectionListOrder = () => {
+        const myListOrder = {
+            dateTime: firebase.firestore.FieldValue.serverTimestamp(),
+            detail: this.state.detail,
+            menu: this.state.menus.name,
+            optionEgg: this.state.optionEgg,
+            optionFood: this.state.optionFood,
+            price: this.state.price,
+            restaurant: this.state.resDetail.name,
+            timeC: this.state.timeC,
+            unit: this.state.unit,
+            ware: this.state.ware
+        }
+        //************************** หา id user ***********************
+        const collection = firestore.collection('user').where("email", "==", "admin@mail.com");
+        var collection_key = "";
+        this.subscriptionUser = collection.onSnapshot((snapshot) => {
+            collection_key = snapshot.docs[0].id
+            console.log("Id .... ",collection_key)
+            const userC = firestore.collection('user')
+                .doc(collection_key); //id ของ user รับ props มา +++++++++++++++++++++++++++++++++++
+
+            userC.collection('list_order').add({ ...myListOrder });
+            
+        });
+        //this.unsubscribeFromFirestoreUser();
+        //****************************************************************
+        
+    }
 
     updateDatabase=()=>{
         firestore.runTransaction((t) => { /*t น่าจะเป็นตัวแทนการทำรายการมีฟังก์ชั่นให้เลือกทำเยอะ */
@@ -209,7 +244,7 @@ export default class Optional extends Component {
                 });
         }
     
-
+    //************************** restaurant firestore ************************************************
     subscribeToFirestoreRestaurant = () => {
         const res = firestore.collection('restaurant');
         this.subscriptionRes = res.onSnapshot((snapshot) => {
@@ -217,9 +252,29 @@ export default class Optional extends Component {
         })
 
     }
+    updateStateResDetail = (docs) => {
+        const restaurant = "restaurant1"//ส่วนนี้เปนส่วนที่รับ prop ชื่อร้านค้า จากแคร์ ++++++++++++++++++++++++++++++
+        docs.map((doc) => {
+            console.log("name : ....", doc.data().name)
+            if (doc.data().name == restaurant) {
+                console.log("pass ++++++++")
+                this.setState({
+                    resDetail: {
+                        id: doc.id,
+                        ...doc.data()
+                    }
+
+                })
+            }
+        })
+        this.subscribeToFirestoreMenus();
+
+    }
     unsubscribeFromFirestoreRestaurant=()=> {
         this.subscriptionRes();
     }
+    //*********************************** end restaurant firestore********************************
+    //*********************************** menus firestore ***************************************
     subscribeToFirestoreMenus = () => {
         console.log("id :", this.state.resDetail.id)
         const menus = firestore.collection('restaurant').doc(this.state.resDetail.id).collection('menus');
@@ -227,25 +282,34 @@ export default class Optional extends Component {
             this.updateStateMenus(snapshot.docs);
         })
     }
+    updateStateMenus = (docs) => {
+        const menu = 'fired_rice' // รับ props ชื่อเมนูจากแคร์++++++++++++++++++++++++++
+        docs.map((doc) => {
+            console.log("doc.name menu: ", doc.data().name)
+            if (doc.data().name == menu) {
+
+                this.setState({
+                    menus: {
+                        id: doc.id,
+                        ...doc.data()
+                    }
+
+                })
+            }
+        })
+        this.subscribeToFirestoreOption();
+    }
+    unSubscribeToFirestoreMenus = () => {
+        this.subscriptionMenus();
+    }
+    //*********************************** end menus firestore*****************************
+
+    //********************************** optiop firestore **********************************
     subscribeToFirestoreOption = () => {
         const option = firestore.collection('restaurant').doc(this.state.resDetail.id).collection('options');
         this.subscriptionOption = option.onSnapshot((snapshot) => {
             this.updateStateOption(snapshot.docs);
         })
-    }
-    subscribeToFirestoreQues = () => {
-        const ques = firestore.collection('restaurant').doc(this.state.resDetail.id).collection('ques');
-        this.subscriptionQues = ques.onSnapshot((snapshot) => {
-            this.updateStateQues(snapshot.docs);
-        })
-        
-    }
-    updateStateQues = (docs) => {
-        const AllTime = docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        this.setState({ AllTime: AllTime, price: this.state.userListOrder.price });
     }
     updateStateOption = (docs) => {
         docs.map((doc) => {
@@ -260,40 +324,34 @@ export default class Optional extends Component {
         })
         this.subscribeToFirestoreQues();
     }
-    updateStateMenus = (docs) => {
-        docs.map((doc) => {
-            console.log("doc.name menu: ", doc.data().name)
-            if (doc.data().name == this.state.userListOrder.menu) {
-
-                this.setState({
-                    menu: {
-                        id: doc.id,
-                        ...doc.data()
-                    }
-
-                })
-            }
-        })
-        this.subscribeToFirestoreOption();
+    unSubscribeToFirestoreOption = () => {
+        this.subscriptionOption();
     }
-    updateStateResDetail = (docs) => {
-        docs.map((doc) => {
-            if (doc.data().name == this.state.userListOrder.restaurant) {
+    //*********************************** end option firestore **********************************
 
-                this.setState({
-                    resDetail: {
-                        id: doc.id,
-                        ...doc.data()
-                    }
-
-                })
-            }
+    //********************************** ques firestore ***********************************
+    subscribeToFirestoreQues = () => {
+        const ques = firestore.collection('restaurant').doc(this.state.resDetail.id).collection('ques');
+        this.subscriptionQues = ques.onSnapshot((snapshot) => {
+            this.updateStateQues(snapshot.docs);
         })
-        this.subscribeToFirestoreMenus();
-
     }
+    updateStateQues = (docs) => {
+        const AllTime = docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        this.setState({ AllTime: AllTime, price: this.state.menus.price });
+        this.findTime();
+    }
+    unSubscribeToFirestoreQues = () => {
+        this.subscriptionQues();
+    }
+    //***************************************** end ques firestore*****************************
+
+
     componentDidMount() {/*จุดเริ่มต้นของแอพ เลย */
-        this.subscribeToFirestoreUser();//go to function
+        //this.subscribeToFirestoreUser();//go to function
         this.subscribeToFirestoreRestaurant();
         //this.subscribeToFirestoreMenus();
         //this.subscribeToFirestoreOption();
@@ -301,81 +359,43 @@ export default class Optional extends Component {
 
     }
     componentWillUnmount() {//จะเรียกเมื่อ component นั้น กำลังจะถูกปิดลง
-        this.unsubscribeFromFirestoreUser();//ไปที่ฟั่งชั่นนี้
+        //this.unsubscribeFromFirestoreUser();//ไปที่ฟั่งชั่นนี้
         this.unsubscribeFromFirestoreRestaurant();
         this.unSubscribeToFirestoreMenus();
         this.unSubscribeToFirestoreOption();
         this.unSubscribeToFirestoreQues();
     }
-
-    subscribeToFirestoreUser = () => {
-
-        const userC = firestore.collection('user')
-            .doc('nOLZVHDgnhyTXsrGjfHj'); //id ของ user
-
-        const listOrder = userC.collection('list_order');
-        this.subscriptionUser = listOrder.onSnapshot((snapshot) => {
-            this.updateStateListOrder(snapshot.docs);
-        });
-
-    }
-
-    updateStateListOrder = (docs) => {
-
-        docs.map((doc) => {/*เป็นการเก็บข้อมูลเป็นแบบ อารเย์ของแต่ละข้อมูลใน database 
-     * โดยแต่ละตัวจะมี id ในการอ้างอิงชุดข้อมูลนั้นๆ */
-            if (doc.id == 'IP4PAoYvDzrgL42GpGJX') {
-                this.setState({
-                    userListOrder: {
-                        id: doc.id,
-                        ...doc.data()
-                    }
-                });
-            }
-
-        });
-        /*this.subscribeToFirestoreRestaurant();*/
-
-    }
-    unsubscribeFromFirestoreUser=()=> {
-        this.subscriptionUser();//ถึงบอกว่า unsub แต่ก้ยัง sub ยุ**************
-    }
-    unsubscribeFromFirestoreRestaurant=() =>{
-        this.subscriptionRes;//ถึงบอกว่า unsub แต่ก้ยัง sub ยุ**************
-    }
     
-    unSubscribeToFirestoreMenus = ()=>{
-    this.subscriptionMenus();
-}
-    unSubscribeToFirestoreOption = () =>{
-    this.subscriptionOption();
-}
-    unSubscribeToFirestoreQues = () =>{
-    this.subscriptionQues();
-}
+
     onValueChange = (value: String) => {
         this.setState({
             selected: value
         });
         
     }
-    findTime = (t) => {
+    findTime = () => {
         let hour = new Date().getHours();
         let minutes = new Date().getMinutes();
         console.log("now Time", hour, minutes);
+        var timeCan = [];
+        this.state.AllTime.map((t) => {
             hr1 = parseInt(t.time.substring(0, 2))
             hr2 = parseInt(t.time.substring(6, 8))
             mm1 = parseInt(t.time.substring(3, 5))
             mm2 = parseInt(t.time.substring(9, 11))
             if (hr1 > hour || hr2 > hour) {
-                return true
+                timeCan.push(t);
             }
             if (hr1 == hour) {
                 if (0 <= minutes && minutes <= 30)
-                    return true
+                    timeCan.push(t);
             }
-            return false
+        })
+
+        this.setState({ AllTime: timeCan});
+        
     }
+
 
     render() {
         return (
@@ -391,17 +411,17 @@ export default class Optional extends Component {
                             </Col>
                             <Col style={{ height: 80 }}>
                                 <Text style={styles.textFont}> {this.state.resDetail.name}{"\n"}</Text>
-                                <Text style={styles.textFont}> Cerrent que {this.state.time.wiat_que}     {this.state.wait_que*2} minute </Text>
+                                <Text style={styles.textFont}> Cerrent que    minute </Text>
                             </Col>
                         </Row>
                         <Row style={{ height: 80, marginBottom: 2 }}>
                             <Col style={{ height: 80, width: 100 }}>
                                 <View style={styles.textEgg}>
-                                    <Thumbnail square source={{ uri: this.state.menu.pic }} />
+                                    <Thumbnail square source={{ uri: this.state.menus.pic }} />
                                 </View>
                             </Col>
                             <Col style={{ height: 80 }}>
-                                <Text style={{ fontSize: 25 }}> {this.state.userListOrder.menu}     {this.state.userListOrder.price} bath</Text>
+                                <Text style={{ fontSize: 25 }}> {this.state.menus.name}     {this.state.menus.price} bath</Text>
                             </Col>
                         </Row>
                         <Row style={{ height: 100, marginBottom: 2 }}>
@@ -477,9 +497,7 @@ export default class Optional extends Component {
                                     >
                                         
                                         {this.state.AllTime.map((t) => {
-                                            
                                             return (<Picker.Item key={t.id} label={t.time + " waiting " + t.wait_que} value={t.time} />);
-
                                         })}
 
                                     </Picker>
@@ -494,7 +512,7 @@ export default class Optional extends Component {
                                     <Text style={{ fontSize: 30 }}> {this.state.price} Baht </Text>
                                 </View>
                             </Col>
-                            <Col onPress={this.updateDatabase} style={{ height: 100 }}>
+                            <Col onPress={this.createCollectionListOrder} style={{ height: 100 }}>
                                 <View style={styles.bottomButton} >
                                     <Thumbnail square source={{ uri: 'https://firebasestorage.googleapis.com/v0/b/mobile-mai-tong-ror.appspot.com/o/icons8-add-shopping-cart-100.png?alt=media&token=12795f67-0325-4651-89a6-834a6217d360' }} />
 
@@ -503,7 +521,7 @@ export default class Optional extends Component {
                         </Row>
                         {console.log("user lisrorder", this.state.userListOrder)}
                         {console.log("resDetail : ", this.state.resDetail)}
-                        {console.log("Menu : ", this.state.menu)}
+                        {console.log("Menu : ", this.state.menus)}
                         {console.log("Option : ", this.state.option)}
                         {console.log("AllTime : ", this.state.AllTime)}
                         {console.log("Time Stramp : ", this.state.dateTime)}
