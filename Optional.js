@@ -34,6 +34,7 @@ export default class Optional extends Component {
         timeC: '',
         ware: '',
         time: {},
+        timeSelected: {}
 
     };
     do = () => {
@@ -139,10 +140,12 @@ export default class Optional extends Component {
         })
     }
     addUnit = () => {
-        this.setState({
-            unit: this.state.unit + 1
-        })
-        this.addPrice('addUnit');
+        if (this.state.unit != this.state.timeSelected.max_que - this.state.timeSelected.wait_que) {
+            this.setState({
+                unit: this.state.unit + 1
+            })
+            this.addPrice('addUnit');
+        } 
     };
     addPrice = (from) => {
         if (from == 'addUnit') {
@@ -199,7 +202,7 @@ export default class Optional extends Component {
             optionFood: this.state.optionFood,
             price: this.state.price,
             restaurant: this.state.resDetail.name,
-            timeC: this.state.timeC,
+            timeC: this.state.selected,
             unit: this.state.unit,
             ware: this.state.ware
         }
@@ -215,6 +218,7 @@ export default class Optional extends Component {
             userC.collection('list_order').add({ ...myListOrder });
             
         });
+        this.updateDatabase();
         //this.unsubscribeFromFirestoreUser();
         //****************************************************************
         
@@ -223,25 +227,15 @@ export default class Optional extends Component {
     updateDatabase=()=>{
         firestore.runTransaction((t) => { /*t น่าจะเป็นตัวแทนการทำรายการมีฟังก์ชั่นให้เลือกทำเยอะ */
             /* ที่ t ทำได้คือ set update delete get ซึ่งจะไปทำกับ database ส่วนที่เราต้องการ*/
-            const listOrder = firestore.collection('user').doc('nOLZVHDgnhyTXsrGjfHj').collection('list_order').doc(this.state.userListOrder.id);
-            const ques = firestore.collection('restaurant').doc(this.state.resDetail.id).collection('ques');
+            const ques = firestore.collection('restaurant').doc(this.state.resDetail.id).collection('ques').doc(this.state.timeSelected.id);
  
                     /*คำสั่งนี้คือรอให้ทั้งหมดในนั้นทำงานเสร็จก่อน ค่อยไปต่อ */
             return Promise.all([
-                t.update(listOrder, {
-                    dateTime: firebase.firestore.FieldValue.serverTimestamp(),
-                    detail: this.state.detail,
-                    menu: this.state.userListOrder.menu,
-                    optionEgg: this.state.optionEgg,
-                    optionFood: this.state.optionFood,
-                    price: this.state.price,
-                    restaurant: this.state.userListOrder.restaurant,
-                    timeC: this.state.timeC,
-                    unit: this.state.unit,
-                    ware:this.state.ware
+                t.update(ques, {
+                    wait_que: this.state.timeSelected.wait_que + this.state.unit
                         }),
                     ]);
-                });
+        });
         }
     
     //************************** restaurant firestore ************************************************
@@ -253,7 +247,7 @@ export default class Optional extends Component {
 
     }
     updateStateResDetail = (docs) => {
-        const restaurant = "restaurant1"//ส่วนนี้เปนส่วนที่รับ prop ชื่อร้านค้า จากแคร์ ++++++++++++++++++++++++++++++
+        const restaurant = "See Fah"//ส่วนนี้เปนส่วนที่รับ prop ชื่อร้านค้า จากแคร์ ++++++++++++++++++++++++++++++
         docs.map((doc) => {
             console.log("name : ....", doc.data().name)
             if (doc.data().name == restaurant) {
@@ -283,7 +277,7 @@ export default class Optional extends Component {
         })
     }
     updateStateMenus = (docs) => {
-        const menu = 'fired_rice' // รับ props ชื่อเมนูจากแคร์++++++++++++++++++++++++++
+        const menu = 'Fried Rice' // รับ props ชื่อเมนูจากแคร์++++++++++++++++++++++++++
         docs.map((doc) => {
             console.log("doc.name menu: ", doc.data().name)
             if (doc.data().name == menu) {
@@ -371,29 +365,30 @@ export default class Optional extends Component {
         this.setState({
             selected: value
         });
-        
+        this.state.AllTime.map((t) => {
+            if (t.time == value) {
+                this.setState({
+                    timeSelected: t
+                })
+            }
+        })
     }
     findTime = () => {
         let hour = new Date().getHours();
         let minutes = new Date().getMinutes();
-        console.log("now Time", hour, minutes);
         var timeCan = [];
         this.state.AllTime.map((t) => {
-            hr1 = parseInt(t.time.substring(0, 2))
-            hr2 = parseInt(t.time.substring(6, 8))
-            mm1 = parseInt(t.time.substring(3, 5))
-            mm2 = parseInt(t.time.substring(9, 11))
-            if (hr1 > hour || hr2 > hour) {
+            tt = parseFloat(t.time.substring(0, 5))
+            console.log("float t", tt);
+            if (tt > hour) {
                 timeCan.push(t);
+            } else if (tt == hour) {
+                if (minutes <= 30)
+                    timeCan.push(t)
             }
-            if (hr1 == hour) {
-                if (0 <= minutes && minutes <= 30)
-                    timeCan.push(t);
-            }
+            
         })
-
-        this.setState({ AllTime: timeCan});
-        
+        this.setState({ AllTime: timeCan, selected: timeCan[0].time, timeSelected: timeCan[0] })
     }
 
 
@@ -411,7 +406,7 @@ export default class Optional extends Component {
                             </Col>
                             <Col style={{ height: 80 }}>
                                 <Text style={styles.textFont}> {this.state.resDetail.name}{"\n"}</Text>
-                                <Text style={styles.textFont}> Cerrent que    minute </Text>
+                                
                             </Col>
                         </Row>
                         <Row style={{ height: 80, marginBottom: 2 }}>
@@ -525,9 +520,11 @@ export default class Optional extends Component {
                         {console.log("Option : ", this.state.option)}
                         {console.log("AllTime : ", this.state.AllTime)}
                         {console.log("Time Stramp : ", this.state.dateTime)}
-                        {console.log("Time: ", this.state.time)}
+                        {console.log("Time selected: ", this.state.timeSelected)}
+                        {console.log("selected: ", this.state.selected)}
+                        
                     </Grid>
-
+                    
                 </Container>
             </ScrollView>
         )
@@ -582,7 +579,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'skyblue',
     }, textFont: {
-        fontSize: 20,
+        fontSize: 30,
     }, bottomButton: {
         flex: 1,
         flexDirection: 'row',
